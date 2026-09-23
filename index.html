@@ -299,12 +299,114 @@
 
   </main>
 
-  <!-- Export Video Progress Modal -->
+  <!-- Export Studio Dialog Modal -->
   <div class="modal-overlay" id="exportModal">
-    <div class="modal-card">
+    <!-- Stage 1: Export Options Configuration -->
+    <div class="modal-card export-modal-card" id="exportConfigStage">
+      <div class="modal-header">
+        <div style="display: flex; align-items: center; gap: 0.5rem;">
+          <span style="font-size: 1.4rem;">🎬</span>
+          <div>
+            <h3 style="font-size: 1.15rem; color: var(--primary-gold-light);">استوديو تصدير الفيديو</h3>
+            <p style="font-size: 0.78rem; color: var(--text-secondary);">اختر الجودة والمؤثرات المناسبة لمنصتك قبل إنشاء الفيديو</p>
+          </div>
+        </div>
+        <button type="button" class="modal-close-btn" id="btnCloseExportModal">&times;</button>
+      </div>
+
+      <!-- Export Settings Grid -->
+      <div class="export-options-body">
+        
+        <!-- 1. Resolution -->
+        <div class="export-setting-group">
+          <label class="control-label">دقة الفيديو (Resolution)</label>
+          <div class="export-pill-grid">
+            <button type="button" class="export-pill-btn active" data-res="1080p">
+              <strong>1080p Full HD</strong>
+              <small>الموصى به لريلز وشورتس</small>
+            </button>
+            <button type="button" class="export-pill-btn" data-res="720p">
+              <strong>720p HD</strong>
+              <small>تصدير سريع وحجم خفيف</small>
+            </button>
+            <button type="button" class="export-pill-btn" data-res="4k">
+              <strong>4K Ultra HD</strong>
+              <small>جودة سينمائية فائقة</small>
+            </button>
+          </div>
+        </div>
+
+        <!-- 2. Frame Rate & Format row -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+          <!-- FPS -->
+          <div class="export-setting-group">
+            <label class="control-label">سلاسة الإطارات (FPS)</label>
+            <div class="export-pill-grid" style="grid-template-columns: 1fr 1fr;">
+              <button type="button" class="export-pill-btn active" data-fps="60">
+                <strong>60 FPS</strong>
+                <small>سلاسة فائقة</small>
+              </button>
+              <button type="button" class="export-pill-btn" data-fps="30">
+                <strong>30 FPS</strong>
+                <small>قياسي</small>
+              </button>
+            </div>
+          </div>
+
+          <!-- Format -->
+          <div class="export-setting-group">
+            <label class="control-label">صيغة الملف (Format)</label>
+            <div class="export-pill-grid" style="grid-template-columns: 1fr 1fr;">
+              <button type="button" class="export-pill-btn active" data-format="mp4">
+                <strong>MP4</strong>
+                <small>شامل لكل الأجهزة</small>
+              </button>
+              <button type="button" class="export-pill-btn" data-format="webm">
+                <strong>WebM</strong>
+                <small>فائق السرعة</small>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- 3. Cinematic Fade Effect Toggle -->
+        <div class="toggle-row" style="background: rgba(22, 34, 29, 0.6); padding: 0.75rem 1rem; border-radius: var(--radius-sm); border: 1px solid var(--border-subtle);">
+          <div>
+            <span style="font-size: 0.85rem; font-weight: 600; color: var(--primary-gold-light); display: block;">تلاشي سينمائي (Fade In / Out)</span>
+            <small style="font-size: 0.72rem; color: var(--text-muted);">دخول وخروج بصري وصوتي سلس في بداية ونهاية المقطع</small>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="exportToggleFade" checked>
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <!-- Start Render Button -->
+        <button type="button" class="btn-primary" id="btnStartRender" style="width: 100%; padding: 0.85rem; font-size: 1rem; justify-content: center; margin-top: 0.5rem; background: linear-gradient(135deg, var(--primary-gold), var(--primary-gold-dark)); color: #000; font-weight: 700;">
+          <span>🚀 بدء تصدير الفيديو الآن</span>
+        </button>
+
+        <!-- Quick Alternative Exports -->
+        <div class="export-quick-actions">
+          <span style="font-size: 0.75rem; color: var(--text-muted); display: block; text-align: center; margin-bottom: 0.4rem;">تصدير سريع بديل:</span>
+          <div style="display: flex; gap: 0.6rem;">
+            <button type="button" class="btn-preset-action" id="btnQuickAudioExport" style="flex: 1; padding: 0.5rem; font-size: 0.8rem; justify-content: center; display: flex; align-items: center; gap: 0.3rem;">
+              <span>🎵 تلاوة صوتية فقط (MP3)</span>
+            </button>
+            <button type="button" class="btn-preset-action" id="btnQuickPosterExport" style="flex: 1; padding: 0.5rem; font-size: 0.8rem; justify-content: center; display: flex; align-items: center; gap: 0.3rem;">
+              <span>🖼️ بوستر الآية HD (PNG)</span>
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Stage 2: Active Video Processing & Progress -->
+    <div class="modal-card" id="exportProgressStage" style="display: none;">
       <div class="export-progress-circle" id="exportProgress">0%</div>
       <h3 id="exportStatus" style="font-size: 1.2rem; color: var(--primary-gold-light);">جاري تصدير المقطع...</h3>
-      <p id="exportSubtext" style="font-size: 0.9rem; color: var(--text-secondary);">يتم الآن معالجة الفيديو بالرسم العثماني والصوت في المتصفح</p>
+      <p id="exportSubtext" style="font-size: 0.9rem; color: var(--text-secondary);">يتم الآن رندرة الإطارات بالخط العثماني والصوت في المتصفح</p>
       <button class="aspect-btn" id="btnCloseExport" style="width: auto; padding: 0.6rem 1.5rem; margin-top: 0.5rem;">إلغاء التصدير</button>
     </div>
   </div>

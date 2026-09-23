@@ -22,6 +22,12 @@ class QuranStudioApp {
     this.showTafsir = false;
     this.showTranslation = true;
 
+    // Export Options
+    this.exportResolution = '1080p';
+    this.exportFps = 60;
+    this.exportFormat = 'mp4';
+    this.exportFade = true;
+
     this.initElements();
     this.initSurahsAndReciters();
     this.initEventListeners();
@@ -74,9 +80,19 @@ class QuranStudioApp {
     this.btnExportPreset = document.getElementById('btnExportPreset');
     this.presetImportFile = document.getElementById('presetImportFile');
 
-    // Export elements
+    // Export Elements & Dialog
     this.elBtnExport = document.getElementById('btnExport');
     this.elExportModal = document.getElementById('exportModal');
+    this.exportConfigStage = document.getElementById('exportConfigStage');
+    this.exportProgressStage = document.getElementById('exportProgressStage');
+    this.btnCloseExportModal = document.getElementById('btnCloseExportModal');
+    this.btnStartRender = document.getElementById('btnStartRender');
+    this.btnQuickAudioExport = document.getElementById('btnQuickAudioExport');
+    this.btnQuickPosterExport = document.getElementById('btnQuickPosterExport');
+    this.exportToggleFade = document.getElementById('exportToggleFade');
+    this.exportResBtns = document.querySelectorAll('[data-res]');
+    this.exportFpsBtns = document.querySelectorAll('[data-fps]');
+    this.exportFormatBtns = document.querySelectorAll('[data-format]');
     this.elExportProgress = document.getElementById('exportProgress');
     this.elExportStatus = document.getElementById('exportStatus');
     this.elExportSubtext = document.getElementById('exportSubtext');
@@ -96,6 +112,10 @@ class QuranStudioApp {
         showTafsir: this.showTafsir,
         showTranslation: this.showTranslation,
         translationId: this.currentTranslationId,
+        exportResolution: this.exportResolution,
+        exportFps: this.exportFps,
+        exportFormat: this.exportFormat,
+        exportFade: this.exportFade,
         showSurahHeader: this.renderer.settings.showSurahHeader,
         showReciterName: this.renderer.settings.showReciterName,
         currentReciterId: this.currentReciterId
@@ -185,6 +205,26 @@ class QuranStudioApp {
       if (this.elTranslationLangSelect) this.elTranslationLangSelect.value = this.currentTranslationId;
     }
 
+    if (preset.exportResolution) {
+      this.exportResolution = preset.exportResolution;
+      this.exportResBtns.forEach(b => b.classList.toggle('active', b.dataset.res === preset.exportResolution));
+    }
+
+    if (preset.exportFps) {
+      this.exportFps = parseInt(preset.exportFps);
+      this.exportFpsBtns.forEach(b => b.classList.toggle('active', parseInt(b.dataset.fps) === this.exportFps));
+    }
+
+    if (preset.exportFormat) {
+      this.exportFormat = preset.exportFormat;
+      this.exportFormatBtns.forEach(b => b.classList.toggle('active', b.dataset.format === preset.exportFormat));
+    }
+
+    if (preset.exportFade !== undefined) {
+      this.exportFade = !!preset.exportFade;
+      if (this.exportToggleFade) this.exportToggleFade.checked = this.exportFade;
+    }
+
     if (preset.showSurahHeader !== undefined) {
       if (this.elToggleSurahHeader) this.elToggleSurahHeader.checked = !!preset.showSurahHeader;
       this.renderer.updateSettings({ showSurahHeader: !!preset.showSurahHeader });
@@ -220,6 +260,10 @@ class QuranStudioApp {
       showTafsir: this.showTafsir,
       showTranslation: this.showTranslation,
       translationId: this.currentTranslationId,
+      exportResolution: this.exportResolution,
+      exportFps: this.exportFps,
+      exportFormat: this.exportFormat,
+      exportFade: this.exportFade,
       showSurahHeader: this.renderer.settings.showSurahHeader,
       showReciterName: this.renderer.settings.showReciterName,
       currentReciterId: this.currentReciterId
@@ -460,6 +504,79 @@ class QuranStudioApp {
     this.elToggleReciter.addEventListener('change', triggerAutoSave);
     this.elReciterSelect.addEventListener('change', triggerAutoSave);
 
+    // Export Options UI Listeners
+    this.exportResBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        this.exportResBtns.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        this.exportResolution = btn.dataset.res;
+        this.saveSettings();
+      });
+    });
+
+    this.exportFpsBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        this.exportFpsBtns.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        this.exportFps = parseInt(btn.dataset.fps);
+        this.saveSettings();
+      });
+    });
+
+    this.exportFormatBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        this.exportFormatBtns.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        this.exportFormat = btn.dataset.format;
+        this.saveSettings();
+      });
+    });
+
+    if (this.exportToggleFade) {
+      this.exportToggleFade.addEventListener('change', (e) => {
+        this.exportFade = e.target.checked;
+        this.saveSettings();
+      });
+    }
+
+    // Open Export Options Modal
+    this.elBtnExport.addEventListener('click', () => {
+      if (!this.surahData) return;
+      this.exportConfigStage.style.display = 'flex';
+      this.exportProgressStage.style.display = 'none';
+      this.elExportModal.classList.add('active');
+    });
+
+    if (this.btnCloseExportModal) {
+      this.btnCloseExportModal.addEventListener('click', () => {
+        this.elExportModal.classList.remove('active');
+      });
+    }
+
+    // Start Render
+    if (this.btnStartRender) {
+      this.btnStartRender.addEventListener('click', () => {
+        this.startExportFlow();
+      });
+    }
+
+    // Quick Audio MP3 Export
+    if (this.btnQuickAudioExport) {
+      this.btnQuickAudioExport.addEventListener('click', () => {
+        if (!this.surahData) return;
+        this.exporter.exportAudioOnly({ surahData: this.surahData });
+      });
+    }
+
+    // Quick Poster PNG Export
+    if (this.btnQuickPosterExport) {
+      this.btnQuickPosterExport.addEventListener('click', () => {
+        const verseNum = this.renderer.state.currentVerse?.ayahNumber || 1;
+        const surahName = this.surahData?.surah?.englishName || 'Surah';
+        this.renderer.takeSnapshot(`Quran_${surahName}_Ayah_${verseNum}.png`);
+      });
+    }
+
     // Player Controls
     this.elPlayBtn.addEventListener('click', () => this.player.togglePlay());
     this.elPrevBtn.addEventListener('click', () => this.player.prevVerse());
@@ -496,8 +613,6 @@ class QuranStudioApp {
       this.elTimeDisplay.textContent = `${curM}:${curS < 10 ? '0' : ''}${curS} / ${durM}:${durS < 10 ? '0' : ''}${durS}`;
     };
 
-    // Export Video Button
-    this.elBtnExport.addEventListener('click', () => this.startExportFlow());
     this.elBtnCloseExport.addEventListener('click', () => {
       this.exporter.cancelExport();
       this.elExportModal.classList.remove('active');
@@ -580,16 +695,25 @@ class QuranStudioApp {
     if (!this.surahData) return;
     this.player.pause();
 
-    this.elExportModal.classList.add('active');
+    // Switch to progress view
+    this.exportConfigStage.style.display = 'none';
+    this.exportProgressStage.style.display = 'flex';
+
     this.elExportProgress.textContent = '0%';
     this.elExportProgress.classList.remove('done');
     this.elExportStatus.textContent = 'جاري تصدير المقطع...';
-    this.elExportSubtext.textContent = 'يتم الآن تجميع الإطارات والصوت في المتصفح مباشرة';
+    this.elExportSubtext.textContent = `جاري تجهيز الإطارات بدقة ${this.exportResolution} وسلاسة ${this.exportFps} FPS`;
     this.elBtnCloseExport.textContent = 'إلغاء التصدير';
 
     try {
       const result = await this.exporter.exportVideo({
         surahData: this.surahData,
+        options: {
+          resolution: this.exportResolution,
+          fps: this.exportFps,
+          format: this.exportFormat,
+          fade: this.exportFade
+        },
         onProgress: ({ percent, currentAyah, totalAyahs }) => {
           this.elExportProgress.textContent = `${percent}%`;
           this.elExportSubtext.textContent = `معالجة الآية ${currentAyah} من ${totalAyahs}`;
@@ -598,13 +722,13 @@ class QuranStudioApp {
           this.elExportProgress.textContent = '100%';
           this.elExportProgress.classList.add('done');
           this.elExportStatus.textContent = 'تم إنشاء الفيديو بنجاح! 🎉';
-          this.elExportSubtext.textContent = 'تم بدء تنزيل ملف الفيديو إلى جهازك تلقائياً';
+          this.elExportSubtext.textContent = `تم إنشاء ملف ${extension.toUpperCase()} بدقة ${this.exportResolution} وبدء التنزيل`;
           this.elBtnCloseExport.textContent = 'إغلاق النافذة';
 
           // Trigger download
           const a = document.createElement('a');
           a.href = url;
-          a.download = `Quran_${this.surahData.surah.englishName}_Ayah_${this.surahData.startAyah}_${this.surahData.endAyah}.${extension}`;
+          a.download = `Quran_${this.surahData.surah.englishName}_Ayah_${this.surahData.startAyah}_${this.surahData.endAyah}_${this.exportResolution}.${extension}`;
           document.body.appendChild(a);
           a.click();
           document.body.removeChild(a);
