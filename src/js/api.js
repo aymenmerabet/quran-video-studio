@@ -1,7 +1,13 @@
-/**
- * Quran API Service
- * Integrates with Quran.com API v4 & EveryAyah
- */
+export const TRANSLATION_LANGUAGES = [
+  { id: 20, code: 'en', name: 'الإنجليزية (English - Saheeh Int.)' },
+  { id: 31, code: 'fr', name: 'الفرنسية (Français - Hamidullah)' },
+  { id: 83, code: 'es', name: 'الإسبانية (Español - Isa Garcia)' },
+  { id: 27, code: 'de', name: 'الألمانية (Deutsch - Bubenheim)' },
+  { id: 77, code: 'tr', name: 'التركية (Türkçe - Diyanet)' },
+  { id: 33, code: 'id', name: 'الإندونيسية (Bahasa Indonesia)' },
+  { id: 54, code: 'ur', name: 'الأردية (اردو - Junagarhi)' },
+  { id: 45, code: 'ru', name: 'الروسية (Русский - Kuliev)' }
+];
 
 export const RECITERS = [
   { id: 7, name: "مشاري بن راشد العفاسي", englishName: "Mishary Rashid Alafasy", style: "مرتل", everyAyahFolder: "Alafasy_128kbps" },
@@ -140,7 +146,7 @@ const API_BASE = 'https://api.quran.com/api/v4';
 /**
  * Fetch verses with Uthmani script and translations for a surah / range
  */
-export async function fetchSurahVerses(surahNumber, fromAyah = 1, toAyah = null, reciterId = 7) {
+export async function fetchSurahVerses(surahNumber, fromAyah = 1, toAyah = null, reciterId = 7, translationId = 20) {
   try {
     const surah = SURAHS.find(s => s.number === parseInt(surahNumber));
     const totalAyahs = surah ? surah.versesCount : 7;
@@ -149,8 +155,8 @@ export async function fetchSurahVerses(surahNumber, fromAyah = 1, toAyah = null,
 
     // Fetch Uthmani text from Quran.com API v4
     const uthmaniUrl = `${API_BASE}/quran/verses/uthmani?chapter_number=${surahNumber}`;
-    // Fetch English translation (Sahih International = ID 20 in Quran.com API v4)
-    const translationUrl = `${API_BASE}/quran/translations/20?chapter_number=${surahNumber}`;
+    // Fetch translation in selected language (default 20 = English Saheeh Int.)
+    const translationUrl = `${API_BASE}/quran/translations/${translationId}?chapter_number=${surahNumber}`;
     // Fetch Arabic Tafsir Muyassar (from alquran.cloud)
     const tafsirUrl = `https://api.alquran.cloud/v1/surah/${surahNumber}/ar.muyassar`;
     // Fetch Audio recitations with verse segments

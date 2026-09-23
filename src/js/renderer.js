@@ -24,7 +24,8 @@ export class VideoRenderer {
       fontSize: 48,
       textPosY: 46, // Vertical percentage (15% to 80%)
       fontOpacity: 1.0, // Font opacity (0.2 to 1.0)
-      subtextType: 'translation', // 'translation', 'tafsir', 'none'
+      showTafsir: false,
+      showTranslation: true,
       showSurahHeader: true,
       showReciterName: true,
       showAyahNumberBadge: true,
@@ -356,48 +357,52 @@ export class VideoRenderer {
       startY += lineHeight;
     });
 
-    // Subtext: Translation OR Arabic Tafsir
-    if (settings.subtextType === 'translation' && verse.textTranslation) {
-      ctx.restore();
-      ctx.save();
-      ctx.globalAlpha = Math.max(0.1, Math.min(1.0, opacity));
-      ctx.direction = 'ltr';
-      ctx.textAlign = 'center';
-      
-      const transFontSize = Math.max(18, Math.min(32, Math.round(fontSize * 0.48)));
-      ctx.font = `500 ${transFontSize}px 'Outfit', 'Inter', sans-serif`;
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.92)';
-      ctx.shadowBlur = 10;
-      ctx.shadowColor = 'rgba(0, 0, 0, 0.9)';
-
-      const transLines = this.wrapText(ctx, verse.textTranslation, maxTextWidth * 0.95);
-      const transLineHeight = transFontSize * 1.5;
-      let transStartY = startY + 28;
-
-      transLines.forEach((tLine) => {
-        ctx.fillText(tLine, width / 2, transStartY);
-        transStartY += transLineHeight;
-      });
-    } else if (settings.subtextType === 'tafsir' && verse.textTafsir) {
+    // 1. Draw Arabic Tafsir if enabled
+    if (settings.showTafsir && verse.textTafsir) {
       ctx.restore();
       ctx.save();
       ctx.globalAlpha = Math.max(0.1, Math.min(1.0, opacity));
       ctx.direction = 'rtl';
       ctx.textAlign = 'center';
       
-      const tafsirFontSize = Math.max(18, Math.min(30, Math.round(fontSize * 0.44)));
+      const tafsirFontSize = Math.max(16, Math.min(28, Math.round(fontSize * 0.40)));
       ctx.font = `500 ${tafsirFontSize}px 'Scheherazade New', 'Amiri Quran', serif`;
-      ctx.fillStyle = 'rgba(243, 229, 171, 0.92)'; // Light Gold / Cream
+      ctx.fillStyle = 'rgba(243, 229, 171, 0.95)'; // Light Gold / Cream
       ctx.shadowBlur = 10;
       ctx.shadowColor = 'rgba(0, 0, 0, 0.95)';
 
-      const tafsirLines = this.wrapText(ctx, `التفسير الميسر: ${verse.textTafsir}`, maxTextWidth * 0.95);
-      const tafsirLineHeight = tafsirFontSize * 1.6;
-      let tafsirStartY = startY + 28;
+      const tafsirLines = this.wrapText(ctx, `التفسير: ${verse.textTafsir}`, maxTextWidth * 0.95);
+      const tafsirLineHeight = tafsirFontSize * 1.55;
+      let tafsirStartY = startY + 24;
 
       tafsirLines.forEach((tLine) => {
         ctx.fillText(tLine, width / 2, tafsirStartY);
         tafsirStartY += tafsirLineHeight;
+      });
+      startY = tafsirStartY; // update offset for translation if both are active
+    }
+
+    // 2. Draw International Translation if enabled
+    if (settings.showTranslation && verse.textTranslation) {
+      ctx.restore();
+      ctx.save();
+      ctx.globalAlpha = Math.max(0.1, Math.min(1.0, opacity));
+      ctx.direction = 'ltr';
+      ctx.textAlign = 'center';
+      
+      const transFontSize = Math.max(16, Math.min(28, Math.round(fontSize * 0.42)));
+      ctx.font = `500 ${transFontSize}px 'Outfit', 'Inter', sans-serif`;
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.92)';
+      ctx.shadowBlur = 10;
+      ctx.shadowColor = 'rgba(0, 0, 0, 0.9)';
+
+      const transLines = this.wrapText(ctx, verse.textTranslation, maxTextWidth * 0.95);
+      const transLineHeight = transFontSize * 1.45;
+      let transStartY = startY + (settings.showTafsir ? 16 : 24);
+
+      transLines.forEach((tLine) => {
+        ctx.fillText(tLine, width / 2, transStartY);
+        transStartY += transLineHeight;
       });
     }
 

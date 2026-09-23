@@ -2,7 +2,7 @@
  * Quran Video Studio - Main Application Controller
  */
 
-import { SURAHS, RECITERS, fetchSurahVerses } from './api.js';
+import { SURAHS, RECITERS, TRANSLATION_LANGUAGES, fetchSurahVerses } from './api.js';
 import { QuranPlayer } from './player.js';
 import { VideoRenderer } from './renderer.js';
 import { VideoExporter } from './exporter.js';
@@ -15,14 +15,19 @@ class QuranStudioApp {
     this.exporter = new VideoExporter(this.renderer, this.player);
 
     this.currentSurahNumber = 1;
-    this.currentReciterId = 7; // Alafasy
+    this.currentReciterId = 7; // Alafasy default
+    this.currentTranslationId = 20; // Saheeh Int. default
     this.fromAyah = 1;
+    this.toAyah = 7;
+    this.showTafsir = false;
+    this.showTranslation = true;
+
     this.initElements();
-    this.initEventListeners();
     this.initSurahsAndReciters();
+    this.initEventListeners();
     this.loadSavedSettings();
     this.renderer.startRenderLoop();
-    this.loadSurah(this.currentSurahNumber, this.fromAyah, this.toAyah, this.currentReciterId);
+    this.loadSurah(this.currentSurahNumber, this.fromAyah, this.toAyah, this.currentReciterId, this.currentTranslationId);
   }
 
   initElements() {
@@ -49,7 +54,9 @@ class QuranStudioApp {
     this.elTimeDisplay = document.getElementById('timeDisplay');
 
     // Style toggles & Subtext
-    this.subtextBtns = document.querySelectorAll('.subtext-btn');
+    this.elToggleTafsir = document.getElementById('toggleTafsir');
+    this.elToggleTranslation = document.getElementById('toggleTranslation');
+    this.elTranslationLangSelect = document.getElementById('translationLangSelect');
     this.elToggleSurahHeader = document.getElementById('toggleSurahHeader');
     this.elToggleReciter = document.getElementById('toggleReciter');
     this.elFontSizeSlider = document.getElementById('fontSizeSlider');
@@ -62,9 +69,6 @@ class QuranStudioApp {
     this.elCustomColorPicker = document.getElementById('customColorPicker');
     this.elBgUpload = document.getElementById('bgUpload');
     this.elSnapshotBtn = document.getElementById('snapshotBtn');
-
-    // Current subtext mode
-    this.currentSubtext = 'translation'; // 'translation', 'tafsir', 'none'
 
     // Preset Backup / Restore elements
     this.btnExportPreset = document.getElementById('btnExportPreset');
@@ -89,7 +93,9 @@ class QuranStudioApp {
         glowColor: this.renderer.settings.glowColor,
         theme: this.renderer.settings.theme,
         aspectRatio: this.renderer.aspectRatio,
-        subtextType: this.currentSubtext,
+        showTafsir: this.showTafsir,
+        showTranslation: this.showTranslation,
+        translationId: this.currentTranslationId,
         showSurahHeader: this.renderer.settings.showSurahHeader,
         showReciterName: this.renderer.settings.showReciterName,
         currentReciterId: this.currentReciterId
@@ -162,18 +168,40 @@ class QuranStudioApp {
       this.renderer.updateSettings({ theme: preset.theme });
     }
 
-    if (preset.subtextType) {
-      this.currentSubtext = preset.subtextType;
-      this.subtextBtns.forEach(btn => {
-        btn.classList.toggle('active', btn.dataset.subtext === preset.subtextType);
-      });
-      this.renderer.updateSettings({ subtextType: preset.subtextType });
-      if (this.surahData) this.renderPlaylist(this.surahData.verses);
+    if (preset.showTafsir !== undefined) {
+      this.showTafsir = !!preset.showTafsir;
+      if (this.elToggleTafsir) this.elToggleTafsir.checked = this.showTafsir;
+      this.renderer.updateSettings({ showTafsir: this.showTafsir });
+    }
+
+    if (preset.showTranslation !== undefined) {
+      this.showTranslation = !!preset.showTranslation;
+      if (this.elToggleTranslation) this.elToggleTranslation.checked = this.showTranslation;
+      this.renderer.updateSettings({ showTranslation: this.showTranslation });
+    }
+
+    if (preset.translationId) {
+      this.currentTranslationId = parseInt(preset.translationId);
+      if (this.elTranslationLangSelect) this.elTranslationLangSelect.value = this.currentTranslationId;
+    }
+
+    if (preset.showSurahHeader !== undefined) {
+      if (this.elToggleSurahHeader) this.elToggleSurahHeader.checked = !!preset.showSurahHeader;
+      this.renderer.updateSettings({ showSurahHeader: !!preset.showSurahHeader });
+    }
+
+    if (preset.showReciterName !== undefined) {
+      if (this.elToggleReciter) this.elToggleReciter.checked = !!preset.showReciterName;
+      this.renderer.updateSettings({ showReciterName: !!preset.showReciterName });
     }
 
     if (preset.currentReciterId) {
       this.currentReciterId = parseInt(preset.currentReciterId);
       if (this.elReciterSelect) this.elReciterSelect.value = preset.currentReciterId;
+    }
+
+    if (this.surahData) {
+      this.renderPlaylist(this.surahData.verses);
     }
   }
 
@@ -189,7 +217,9 @@ class QuranStudioApp {
       glowColor: this.renderer.settings.glowColor,
       theme: this.renderer.settings.theme,
       aspectRatio: this.renderer.aspectRatio,
-      subtextType: this.currentSubtext,
+      showTafsir: this.showTafsir,
+      showTranslation: this.showTranslation,
+      translationId: this.currentTranslationId,
       showSurahHeader: this.renderer.settings.showSurahHeader,
       showReciterName: this.renderer.settings.showReciterName,
       currentReciterId: this.currentReciterId
@@ -229,8 +259,15 @@ class QuranStudioApp {
 
     // Populate Reciters
     this.elReciterSelect.innerHTML = RECITERS.map(r => 
-      `<option value="${r.id}">${r.name} (${r.englishName})</option>`
+      `<option value="${r.id}">${r.name} (${r.englishName}) - ${r.style}</option>`
     ).join('');
+
+    // Populate Translation Languages
+    if (this.elTranslationLangSelect) {
+      this.elTranslationLangSelect.innerHTML = TRANSLATION_LANGUAGES.map(t => 
+        `<option value="${t.id}" ${t.id === this.currentTranslationId ? 'selected' : ''}>${t.name}</option>`
+      ).join('');
+    }
   }
 
   initEventListeners() {
@@ -244,22 +281,31 @@ class QuranStudioApp {
         this.elFromAyah.max = surah.versesCount;
         this.elToAyah.max = surah.versesCount;
         this.elMaxAyahLabel.textContent = `(من 1 إلى ${surah.versesCount})`;
-        this.loadSurah(this.currentSurahNumber, 1, this.elToAyah.value, this.currentReciterId);
+        this.loadSurah(this.currentSurahNumber, 1, this.elToAyah.value, this.currentReciterId, this.currentTranslationId);
       }
     });
 
     // Reciter Selection Change
     this.elReciterSelect.addEventListener('change', (e) => {
       this.currentReciterId = parseInt(e.target.value);
-      this.loadSurah(this.currentSurahNumber, this.elFromAyah.value, this.elToAyah.value, this.currentReciterId);
+      this.loadSurah(this.currentSurahNumber, this.elFromAyah.value, this.elToAyah.value, this.currentReciterId, this.currentTranslationId);
     });
+
+    // Translation Language Change
+    if (this.elTranslationLangSelect) {
+      this.elTranslationLangSelect.addEventListener('change', (e) => {
+        this.currentTranslationId = parseInt(e.target.value);
+        this.loadSurah(this.currentSurahNumber, this.elFromAyah.value, this.elToAyah.value, this.currentReciterId, this.currentTranslationId);
+        this.saveSettings();
+      });
+    }
 
     // Ayah Range Change
     const handleRangeChange = () => {
       let from = parseInt(this.elFromAyah.value) || 1;
       let to = parseInt(this.elToAyah.value) || 1;
       if (from > to) from = to;
-      this.loadSurah(this.currentSurahNumber, from, to, this.currentReciterId);
+      this.loadSurah(this.currentSurahNumber, from, to, this.currentReciterId, this.currentTranslationId);
     };
 
     this.elFromAyah.addEventListener('change', handleRangeChange);
@@ -311,19 +357,25 @@ class QuranStudioApp {
       }
     });
 
-    // Subtext Selection (Translation / Tafsir / None)
-    this.subtextBtns.forEach(btn => {
-      btn.addEventListener('click', () => {
-        this.subtextBtns.forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        const subtext = btn.dataset.subtext;
-        this.currentSubtext = subtext;
-        this.renderer.updateSettings({ subtextType: subtext });
-        if (this.surahData) {
-          this.renderPlaylist(this.surahData.verses);
-        }
+    // Toggle Tafsir
+    if (this.elToggleTafsir) {
+      this.elToggleTafsir.addEventListener('change', (e) => {
+        this.showTafsir = e.target.checked;
+        this.renderer.updateSettings({ showTafsir: this.showTafsir });
+        if (this.surahData) this.renderPlaylist(this.surahData.verses);
+        this.saveSettings();
       });
-    });
+    }
+
+    // Toggle Translation
+    if (this.elToggleTranslation) {
+      this.elToggleTranslation.addEventListener('change', (e) => {
+        this.showTranslation = e.target.checked;
+        this.renderer.updateSettings({ showTranslation: this.showTranslation });
+        if (this.surahData) this.renderPlaylist(this.surahData.verses);
+        this.saveSettings();
+      });
+    }
 
     this.elToggleSurahHeader.addEventListener('change', (e) => {
       this.renderer.updateSettings({ showSurahHeader: e.target.checked });
@@ -404,7 +456,8 @@ class QuranStudioApp {
     this.colorSwatches.forEach(s => s.addEventListener('click', triggerAutoSave));
     this.themeCards.forEach(c => c.addEventListener('click', triggerAutoSave));
     this.aspectBtns.forEach(b => b.addEventListener('click', triggerAutoSave));
-    this.subtextBtns.forEach(b => b.addEventListener('click', triggerAutoSave));
+    this.elToggleSurahHeader.addEventListener('change', triggerAutoSave);
+    this.elToggleReciter.addEventListener('change', triggerAutoSave);
     this.elReciterSelect.addEventListener('change', triggerAutoSave);
 
     // Player Controls
@@ -414,7 +467,6 @@ class QuranStudioApp {
 
     this.elProgressBar.addEventListener('click', (e) => {
       const rect = this.elProgressBar.getBoundingClientRect();
-      // Calculate percentage taking RTL into account
       const clickX = e.clientX - rect.left;
       const percent = clickX / rect.width;
       this.player.seekPercentage(percent);
@@ -452,13 +504,13 @@ class QuranStudioApp {
     });
   }
 
-  async loadSurah(surahNum, fromAyah, toAyah, reciterId) {
+  async loadSurah(surahNum, fromAyah, toAyah, reciterId, translationId = this.currentTranslationId) {
     try {
       this.elPlayBtn.disabled = true;
       this.elProgressFill.style.width = '0%';
       this.elTimeDisplay.textContent = 'جاري التحميل...';
 
-      const data = await fetchSurahVerses(surahNum, fromAyah, toAyah, reciterId);
+      const data = await fetchSurahVerses(surahNum, fromAyah, toAyah, reciterId, translationId);
       this.surahData = data;
 
       this.renderer.updateState({
@@ -483,11 +535,12 @@ class QuranStudioApp {
 
   renderPlaylist(verses) {
     this.elAyahList.innerHTML = verses.map((v, i) => {
-      let subtextContent = '';
-      if (this.currentSubtext === 'translation' && v.textTranslation) {
-        subtextContent = `<div class="ayah-item-trans">${v.textTranslation}</div>`;
-      } else if (this.currentSubtext === 'tafsir' && v.textTafsir) {
-        subtextContent = `<div class="ayah-item-trans" style="direction: rtl; text-align: right; color: var(--primary-gold-light); font-family: var(--font-arabic-ui); font-size: 0.85rem;">التفسير: ${v.textTafsir}</div>`;
+      let extraBlocks = '';
+      if (this.showTafsir && v.textTafsir) {
+        extraBlocks += `<div class="ayah-item-trans" style="direction: rtl; text-align: right; color: #f3e5ab; font-family: var(--font-arabic-ui); font-size: 0.85rem; margin-top: 4px;">التفسير: ${v.textTafsir}</div>`;
+      }
+      if (this.showTranslation && v.textTranslation) {
+        extraBlocks += `<div class="ayah-item-trans" style="margin-top: 4px;">${v.textTranslation}</div>`;
       }
 
       return `
@@ -497,7 +550,7 @@ class QuranStudioApp {
             <span style="font-family: var(--font-latin); font-size: 0.75rem; color: var(--text-muted);">${v.verseKey}</span>
           </div>
           <div class="ayah-item-text">${v.textUthmani}</div>
-          ${subtextContent}
+          ${extraBlocks}
         </div>
       `;
     }).join('');
