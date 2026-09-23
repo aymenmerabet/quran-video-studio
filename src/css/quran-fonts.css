@@ -1,0 +1,14 @@
+@import url('https://fonts.googleapis.com/css2?family=Amiri+Quran&family=Amiri:ital,wght@0,400;0,700;1,400&family=Alexandria:wght@300;400;500;600;700;800&family=Outfit:wght@300;400;500;600;700&family=Scheherazade+New:wght@400;500;600;700&display=swap');
+
+:root {
+  --font-quran: 'Amiri Quran', 'Scheherazade New', serif;
+  --font-arabic-ui: 'Alexandria', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-latin: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+.quran-text {
+  font-family: var(--font-quran);
+  line-height: 2.2;
+  text-rendering: optimizeLegibility;
+  font-feature-settings: "cv01" on, "cv02" on;
+}

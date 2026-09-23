@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>استوديو القرآن الكريم | Quran Video Studio & Generator</title>
+  <meta name="description" content="منصة متقدمة لتوليد وتشغيل مقاطع القرآن الكريم بدقة عالية ورسم عثماني مع التزامن الصوتي والتصدير لشبكات التواصل الاجتماعي.">
+  <meta name="keywords" content="قرآن, فيديو قرآن, Quran Studio, Uthmani Quran, تلاوات, مشاري العفاسي, عبد الباسط, ريلز قرآن">
+  
+  <!-- Open Graph -->
+  <meta property="og:title" content="استوديو القرآن الكريم | Quran Video Studio">
+  <meta property="og:description" content="اصنع مقاطع قرآنية بصرية مذهلة متزامنة مع الصوت بدقة عالية بدون استهلاك المعالج.">
+  <meta property="og:type" content="website">
+
+  <!-- Favicon / Brand -->
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23D4AF37'><path d='M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z'/></svg>">
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="./src/css/style.css">
+</head>
+<body>
+  <!-- Header Bar -->
+  <header class="app-header">
+    <div class="brand">
+      <div class="brand-icon">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+        </svg>
+      </div>
+      <div>
+        <h1 class="brand-title">استوديو القرآن الكريم</h1>
+        <div class="brand-subtitle">Quran Video Creator & Synchronized Player</div>
+      </div>
+    </div>
+
+    <div class="header-actions">
+      <button class="btn-export" id="btnExport">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+          <polyline points="7 10 12 15 17 10"/>
+          <line x1="12" y1="15" x2="12" y2="3"/>
+        </svg>
+        <span>تصدير الفيديو</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Studio Workspace -->
+  <main class="studio-container">
+    
+    <!-- Left Panel: Customizer Controls -->
+    <aside class="panel">
+      <div class="panel-title">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+        </svg>
+        <span>إعدادات المقطع والمحتوى</span>
+      </div>
+
+      <!-- Surah Selection -->
+      <div class="control-group">
+        <label class="control-label" for="surahSelect">السورة الكريمة</label>
+        <select id="surahSelect"></select>
+      </div>
+
+      <!-- Reciter Selection -->
+      <div class="control-group">
+        <label class="control-label" for="reciterSelect">القارئ</label>
+        <select id="reciterSelect"></select>
+      </div>
+
+      <!-- Ayah Range Selection -->
+      <div class="control-group">
+        <div class="control-label">
+          <span>نطاق الآيات</span>
+          <span id="maxAyahLabel" class="control-value">(من 1 إلى 7)</span>
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem;">
+          <div>
+            <label style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-bottom: 2px;">من آية:</label>
+            <input type="number" id="fromAyah" value="1" min="1" max="286">
+          </div>
+          <div>
+            <label style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-bottom: 2px;">إلى آية:</label>
+            <input type="number" id="toAyah" value="7" min="1" max="286">
+          </div>
+        </div>
+      </div>
+
+      <!-- Aspect Ratio -->
+      <div class="control-group">
+        <label class="control-label">أبعاد الفيديو (المنصة)</label>
+        <div class="aspect-selector">
+          <button class="aspect-btn active" data-ratio="9:16">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke-width="2"><rect x="7" y="2" width="10" height="20" rx="2"/></svg>
+            <span>9:16 ريلز/تيك توك</span>
+          </button>
+          <button class="aspect-btn" data-ratio="16:9">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke-width="2"><rect x="2" y="6" width="20" height="12" rx="2"/></svg>
+            <span>16:9 يوتيوب</span>
+          </button>
+          <button class="aspect-btn" data-ratio="1:1">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>
+            <span>1:1 مربع</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Background Themes -->
+      <div class="control-group">
+        <label class="control-label">نمط الخلفية والأجواء</label>
+        <div class="theme-grid">
+          <div class="theme-card active" data-theme="emerald-gold">
+            <div class="theme-dot" style="background: linear-gradient(135deg, #10b981, #d4af37);"></div>
+            <span>زمرد ملكي وذهب</span>
+          </div>
+          <div class="theme-card" data-theme="midnight-blue">
+            <div class="theme-dot" style="background: linear-gradient(135deg, #1e3a8a, #38bdf8);"></div>
+            <span>سماء الليل</span>
+          </div>
+          <div class="theme-card" data-theme="velvet-black">
+            <div class="theme-dot" style="background: linear-gradient(135deg, #27272a, #71717a);"></div>
+            <span>مخمل أسود هادئ</span>
+          </div>
+          <div class="theme-card" data-theme="pure-gold">
+            <div class="theme-dot" style="background: linear-gradient(135deg, #ca8a04, #fef08a);"></div>
+            <span>توهج ذهبي</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Custom Background Media Upload -->
+      <div class="control-group">
+        <label class="control-label" for="bgUpload">رفع خلفية خاصة (فيديو / صورة)</label>
+        <input type="file" id="bgUpload" accept="video/mp4,video/webm,image/*" style="font-size: 0.8rem; padding: 0.5rem;">
+      </div>
+
+      <!-- Display Toggles -->
+      <div class="control-group" style="border-top: 1px solid var(--border-subtle); padding-top: 0.75rem;">
+        <div class="toggle-row">
+          <span style="font-size: 0.85rem; color: var(--text-secondary);">إظهار شريط عنوان السورة</span>
+          <label class="switch">
+            <input type="checkbox" id="toggleSurahHeader" checked>
+            <span class="slider"></span>
+          </label>
+        </div>
+        <div class="toggle-row">
+          <span style="font-size: 0.85rem; color: var(--text-secondary);">إظهار الترجمة الإنجليزية</span>
+          <label class="switch">
+            <input type="checkbox" id="toggleTranslation" checked>
+            <span class="slider"></span>
+          </label>
+        </div>
+        <div class="toggle-row">
+          <span style="font-size: 0.85rem; color: var(--text-secondary);">إظهار اسم القارئ ورقم الآية</span>
+          <label class="switch">
+            <input type="checkbox" id="toggleReciter" checked>
+            <span class="slider"></span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Typography Settings -->
+      <div class="control-group">
+        <div class="control-label">
+          <label for="fontSizeSlider">حجم خط الآيات</label>
+          <span id="fontSizeLabel" class="control-value">48px</span>
+        </div>
+        <input type="range" id="fontSizeSlider" min="28" max="84" value="48">
+      </div>
+    </aside>
+
+    <!-- Center Stage: Live Interactive Previewer -->
+    <section class="preview-stage">
+      <div class="stage-viewport-wrapper">
+        <div class="canvas-container ratio-9-16" id="canvasContainer">
+          <canvas id="videoCanvas"></canvas>
+        </div>
+      </div>
+
+      <!-- Live Player Controls Bar -->
+      <div class="player-toolbar">
+        <button class="nav-btn" id="prevBtn" title="الآية السابقة">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><polygon points="19 20 9 12 19 4 19 20"/><line x1="5" y1="19" x2="5" y2="5" stroke="currentColor" stroke-width="2"/></svg>
+        </button>
+
+        <button class="play-btn" id="playBtn" title="تشغيل / إيقاف">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+        </button>
+
+        <button class="nav-btn" id="nextBtn" title="الآية التالية">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 4 15 12 5 20 5 4"/><line x1="19" y1="5" x2="19" y2="19" stroke="currentColor" stroke-width="2"/></svg>
+        </button>
+
+        <div class="progress-bar-container" id="progressBar">
+          <div class="progress-fill" id="progressFill"></div>
+        </div>
+
+        <div class="time-display" id="timeDisplay">0:00 / 0:00</div>
+      </div>
+    </section>
+
+    <!-- Right Panel: Ayah Playlist & Synchronized Text -->
+    <aside class="panel playlist-panel">
+      <div class="panel-title">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/>
+        </svg>
+        <span>الآيات والتزامن الصوتي</span>
+      </div>
+
+      <div class="ayah-list" id="ayahList">
+        <!-- Ayahs will be rendered dynamically here -->
+      </div>
+    </aside>
+
+  </main>
+
+  <!-- Export Video Progress Modal -->
+  <div class="modal-overlay" id="exportModal">
+    <div class="modal-card">
+      <div class="export-progress-circle" id="exportProgress">0%</div>
+      <h3 id="exportStatus" style="font-size: 1.2rem; color: var(--primary-gold-light);">جاري تصدير المقطع...</h3>
+      <p id="exportSubtext" style="font-size: 0.9rem; color: var(--text-secondary);">يتم الآن معالجة الفيديو بالرسم العثماني والصوت في المتصفح</p>
+      <button class="aspect-btn" id="btnCloseExport" style="width: auto; padding: 0.6rem 1.5rem; margin-top: 0.5rem;">إلغاء التصدير</button>
+    </div>
+  </div>
+
+  <!-- Main JavaScript App -->
+  <script type="module" src="./src/js/app.js"></script>
+</body>
+</html>
