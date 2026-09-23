@@ -17,14 +17,12 @@ class QuranStudioApp {
     this.currentSurahNumber = 1;
     this.currentReciterId = 7; // Alafasy
     this.fromAyah = 1;
-    this.toAyah = 7;
-    this.surahData = null;
-
     this.initElements();
     this.initEventListeners();
     this.initSurahsAndReciters();
+    this.loadSavedSettings();
     this.renderer.startRenderLoop();
-    this.loadSurah(1, 1, 7, 7);
+    this.loadSurah(this.currentSurahNumber, this.fromAyah, this.toAyah, this.currentReciterId);
   }
 
   initElements() {
@@ -68,6 +66,10 @@ class QuranStudioApp {
     // Current subtext mode
     this.currentSubtext = 'translation'; // 'translation', 'tafsir', 'none'
 
+    // Preset Backup / Restore elements
+    this.btnExportPreset = document.getElementById('btnExportPreset');
+    this.presetImportFile = document.getElementById('presetImportFile');
+
     // Export elements
     this.elBtnExport = document.getElementById('btnExport');
     this.elExportModal = document.getElementById('exportModal');
@@ -75,6 +77,148 @@ class QuranStudioApp {
     this.elExportStatus = document.getElementById('exportStatus');
     this.elExportSubtext = document.getElementById('exportSubtext');
     this.elBtnCloseExport = document.getElementById('btnCloseExport');
+  }
+
+  saveSettings() {
+    try {
+      const preset = {
+        fontSize: this.renderer.settings.fontSize,
+        fontOpacity: this.renderer.settings.fontOpacity,
+        textPosY: this.renderer.settings.textPosY,
+        highlightColor: this.renderer.settings.highlightColor,
+        glowColor: this.renderer.settings.glowColor,
+        theme: this.renderer.settings.theme,
+        aspectRatio: this.renderer.aspectRatio,
+        subtextType: this.currentSubtext,
+        showSurahHeader: this.renderer.settings.showSurahHeader,
+        showReciterName: this.renderer.settings.showReciterName,
+        currentReciterId: this.currentReciterId
+      };
+      localStorage.setItem('quran_studio_preset', JSON.stringify(preset));
+    } catch (e) {
+      console.warn('Could not save settings to localStorage:', e);
+    }
+  }
+
+  loadSavedSettings() {
+    try {
+      const saved = localStorage.getItem('quran_studio_preset');
+      if (saved) {
+        const preset = JSON.parse(saved);
+        this.applyPreset(preset);
+      }
+    } catch (e) {
+      console.warn('Could not load settings from localStorage:', e);
+    }
+  }
+
+  applyPreset(preset) {
+    if (!preset) return;
+
+    if (preset.fontSize) {
+      this.elFontSizeSlider.value = preset.fontSize;
+      if (this.elFontSizeLabel) this.elFontSizeLabel.textContent = `${preset.fontSize}px`;
+      this.renderer.updateSettings({ fontSize: preset.fontSize });
+    }
+
+    if (preset.fontOpacity !== undefined) {
+      const pct = Math.round(preset.fontOpacity * 100);
+      this.elFontOpacitySlider.value = pct;
+      if (this.elFontOpacityLabel) this.elFontOpacityLabel.textContent = `${pct}%`;
+      this.renderer.updateSettings({ fontOpacity: preset.fontOpacity });
+    }
+
+    if (preset.textPosY !== undefined) {
+      this.elTextPosSlider.value = preset.textPosY;
+      if (this.elTextPosLabel) this.elTextPosLabel.textContent = `${preset.textPosY}%`;
+      this.renderer.updateSettings({ textPosY: preset.textPosY });
+    }
+
+    if (preset.highlightColor) {
+      this.renderer.updateSettings({
+        highlightColor: preset.highlightColor,
+        glowColor: preset.glowColor || `${preset.highlightColor}80`
+      });
+      if (this.elCustomColorPicker) this.elCustomColorPicker.value = preset.highlightColor;
+      this.colorSwatches.forEach(s => {
+        s.classList.toggle('active', s.dataset.color === preset.highlightColor);
+      });
+    }
+
+    if (preset.aspectRatio) {
+      this.aspectBtns.forEach(btn => {
+        const active = btn.dataset.ratio === preset.aspectRatio;
+        btn.classList.toggle('active', active);
+      });
+      this.renderer.setAspectRatio(preset.aspectRatio);
+      this.canvasContainer.className = 'canvas-container';
+      this.canvasContainer.classList.add(`ratio-${preset.aspectRatio.replace(':', '-')}`);
+    }
+
+    if (preset.theme) {
+      this.themeCards.forEach(card => {
+        card.classList.toggle('active', card.dataset.theme === preset.theme);
+      });
+      this.renderer.updateSettings({ theme: preset.theme });
+    }
+
+    if (preset.subtextType) {
+      this.currentSubtext = preset.subtextType;
+      this.subtextBtns.forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.subtext === preset.subtextType);
+      });
+      this.renderer.updateSettings({ subtextType: preset.subtextType });
+      if (this.surahData) this.renderPlaylist(this.surahData.verses);
+    }
+
+    if (preset.currentReciterId) {
+      this.currentReciterId = parseInt(preset.currentReciterId);
+      if (this.elReciterSelect) this.elReciterSelect.value = preset.currentReciterId;
+    }
+  }
+
+  exportPresetFile() {
+    const preset = {
+      app: 'Quran Video Studio',
+      version: '1.0',
+      exportedAt: new Date().toISOString(),
+      fontSize: this.renderer.settings.fontSize,
+      fontOpacity: this.renderer.settings.fontOpacity,
+      textPosY: this.renderer.settings.textPosY,
+      highlightColor: this.renderer.settings.highlightColor,
+      glowColor: this.renderer.settings.glowColor,
+      theme: this.renderer.settings.theme,
+      aspectRatio: this.renderer.aspectRatio,
+      subtextType: this.currentSubtext,
+      showSurahHeader: this.renderer.settings.showSurahHeader,
+      showReciterName: this.renderer.settings.showReciterName,
+      currentReciterId: this.currentReciterId
+    };
+
+    const blob = new Blob([JSON.stringify(preset, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `Quran_Studio_Preset_${this.renderer.settings.theme}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+  }
+
+  importPresetFile(file) {
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const preset = JSON.parse(e.target.result);
+        this.applyPreset(preset);
+        this.saveSettings();
+        alert('تم استيراد وتطبيق القالب بنجاح! ✨');
+      } catch (err) {
+        alert('عذراً، ملف القالب غير صالح.');
+      }
+    };
+    reader.readAsText(file);
   }
 
   initSurahsAndReciters() {
@@ -239,17 +383,29 @@ class QuranStudioApp {
       });
     });
 
-    // Custom Color Picker Input
-    if (this.elCustomColorPicker) {
-      this.elCustomColorPicker.addEventListener('input', (e) => {
-        const color = e.target.value;
-        this.colorSwatches.forEach(s => s.classList.remove('active'));
-        this.renderer.updateSettings({
-          highlightColor: color,
-          glowColor: `${color}80` // 50% alpha hex
-        });
+    // Preset Export / Import Listeners
+    if (this.btnExportPreset) {
+      this.btnExportPreset.addEventListener('click', () => this.exportPresetFile());
+    }
+    if (this.presetImportFile) {
+      this.presetImportFile.addEventListener('change', (e) => {
+        if (e.target.files && e.target.files[0]) {
+          this.importPresetFile(e.target.files[0]);
+        }
       });
     }
+
+    // Auto-save on settings changes
+    const triggerAutoSave = () => this.saveSettings();
+    this.elFontSizeSlider.addEventListener('change', triggerAutoSave);
+    this.elFontOpacitySlider.addEventListener('change', triggerAutoSave);
+    this.elTextPosSlider.addEventListener('change', triggerAutoSave);
+    if (this.elCustomColorPicker) this.elCustomColorPicker.addEventListener('change', triggerAutoSave);
+    this.colorSwatches.forEach(s => s.addEventListener('click', triggerAutoSave));
+    this.themeCards.forEach(c => c.addEventListener('click', triggerAutoSave));
+    this.aspectBtns.forEach(b => b.addEventListener('click', triggerAutoSave));
+    this.subtextBtns.forEach(b => b.addEventListener('click', triggerAutoSave));
+    this.elReciterSelect.addEventListener('change', triggerAutoSave);
 
     // Player Controls
     this.elPlayBtn.addEventListener('click', () => this.player.togglePlay());

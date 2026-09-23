@@ -217,6 +217,22 @@
           <input type="color" id="customColorPicker" class="color-picker-input" value="#F5D77F" title="اختر لون مخصص">
         </div>
       </div>
+
+      <!-- Preset Backup & Restore (حفظ واستيراد الإعدادات) -->
+      <div class="control-group" style="border-top: 1px solid var(--border-subtle); padding-top: 0.75rem;">
+        <label class="control-label">حفظ وإدارة القوالب (Presets)</label>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; margin-top: 4px;">
+          <button class="aspect-btn" id="btnExportPreset" style="padding: 0.6rem 0.4rem; font-size: 0.8rem; background: rgba(212, 175, 55, 0.1);">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            <span>تصدير ملف القالب</span>
+          </button>
+          <label class="aspect-btn" style="padding: 0.6rem 0.4rem; font-size: 0.8rem; cursor: pointer; margin: 0;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+            <span>استيراد ملف قالب</span>
+            <input type="file" id="presetImportFile" accept=".json" style="display: none;">
+          </label>
+        </div>
+      </div>
     </aside>
 
     <!-- Center Stage: Live Interactive Previewer -->
