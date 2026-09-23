@@ -23,7 +23,8 @@ export class VideoRenderer {
       fontFamily: 'Amiri Quran, serif',
       fontSize: 48,
       textPosY: 46, // Vertical percentage (15% to 80%)
-      showTranslation: true,
+      fontOpacity: 1.0, // Font opacity (0.2 to 1.0)
+      subtextType: 'translation', // 'translation', 'tafsir', 'none'
       showSurahHeader: true,
       showReciterName: true,
       showAyahNumberBadge: true,
@@ -328,7 +329,9 @@ export class VideoRenderer {
     
     // User-controlled font size from the slider
     const fontSize = parseInt(settings.fontSize) || 48;
+    const opacity = settings.fontOpacity !== undefined ? parseFloat(settings.fontOpacity) : 1.0;
 
+    ctx.globalAlpha = Math.max(0.1, Math.min(1.0, opacity));
     ctx.font = `600 ${fontSize}px ${settings.fontFamily}`;
     
     // Glowing text effect
@@ -353,10 +356,11 @@ export class VideoRenderer {
       startY += lineHeight;
     });
 
-    // Draw Translation if enabled
-    if (settings.showTranslation && verse.textTranslation) {
+    // Subtext: Translation OR Arabic Tafsir
+    if (settings.subtextType === 'translation' && verse.textTranslation) {
       ctx.restore();
       ctx.save();
+      ctx.globalAlpha = Math.max(0.1, Math.min(1.0, opacity));
       ctx.direction = 'ltr';
       ctx.textAlign = 'center';
       
@@ -374,9 +378,42 @@ export class VideoRenderer {
         ctx.fillText(tLine, width / 2, transStartY);
         transStartY += transLineHeight;
       });
+    } else if (settings.subtextType === 'tafsir' && verse.textTafsir) {
+      ctx.restore();
+      ctx.save();
+      ctx.globalAlpha = Math.max(0.1, Math.min(1.0, opacity));
+      ctx.direction = 'rtl';
+      ctx.textAlign = 'center';
+      
+      const tafsirFontSize = Math.max(18, Math.min(30, Math.round(fontSize * 0.44)));
+      ctx.font = `500 ${tafsirFontSize}px 'Scheherazade New', 'Amiri Quran', serif`;
+      ctx.fillStyle = 'rgba(243, 229, 171, 0.92)'; // Light Gold / Cream
+      ctx.shadowBlur = 10;
+      ctx.shadowColor = 'rgba(0, 0, 0, 0.95)';
+
+      const tafsirLines = this.wrapText(ctx, `التفسير الميسر: ${verse.textTafsir}`, maxTextWidth * 0.95);
+      const tafsirLineHeight = tafsirFontSize * 1.6;
+      let tafsirStartY = startY + 28;
+
+      tafsirLines.forEach((tLine) => {
+        ctx.fillText(tLine, width / 2, tafsirStartY);
+        tafsirStartY += tafsirLineHeight;
+      });
     }
 
     ctx.restore();
+  }
+
+  takeSnapshot(filename = 'quran_poster.png') {
+    // Render current frame cleanly
+    this.renderFrame();
+    const dataUrl = this.canvas.toDataURL('image/png');
+    const a = document.createElement('a');
+    a.href = dataUrl;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
   }
 
   drawFooter(ctx, width, height, state, settings) {

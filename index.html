@@ -129,25 +129,42 @@
         </div>
       </div>
 
-      <!-- Custom Background Media Upload -->
+      <!-- Custom Background Media Upload & Free Stock Links -->
       <div class="control-group">
         <label class="control-label" for="bgUpload">رفع خلفية خاصة (فيديو / صورة)</label>
         <input type="file" id="bgUpload" accept="video/mp4,video/webm,image/*" style="font-size: 0.8rem; padding: 0.5rem;">
+        <div class="free-stock-links">
+          <span style="font-size: 0.75rem; color: var(--text-muted); display: block; margin-top: 4px;">مواقع تحميل خلفيات فيديو 4K مجاناً:</span>
+          <div style="display: flex; gap: 0.4rem; margin-top: 4px; flex-wrap: wrap;">
+            <a href="https://www.pexels.com/search/videos/nature/" target="_blank" rel="noopener" class="stock-link-badge">Pexels Nature ↗</a>
+            <a href="https://pixabay.com/videos/search/islamic/" target="_blank" rel="noopener" class="stock-link-badge">Pixabay Islamic ↗</a>
+            <a href="https://mixkit.co/free-stock-video/nature/" target="_blank" rel="noopener" class="stock-link-badge">Mixkit ↗</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Subtext Selection: Translation or Tafsir -->
+      <div class="control-group" style="border-top: 1px solid var(--border-subtle); padding-top: 0.75rem;">
+        <label class="control-label">النص الإضافي أسفل الآية</label>
+        <div class="subtext-selector">
+          <button class="subtext-btn active" data-subtext="translation">
+            <span>الترجمة الإنجليزية</span>
+          </button>
+          <button class="subtext-btn" data-subtext="tafsir">
+            <span>التفسير الميسر</span>
+          </button>
+          <button class="subtext-btn" data-subtext="none">
+            <span>بدون نص إضافي</span>
+          </button>
+        </div>
       </div>
 
       <!-- Display Toggles -->
-      <div class="control-group" style="border-top: 1px solid var(--border-subtle); padding-top: 0.75rem;">
+      <div class="control-group">
         <div class="toggle-row">
           <span style="font-size: 0.85rem; color: var(--text-secondary);">إظهار شريط عنوان السورة</span>
           <label class="switch">
             <input type="checkbox" id="toggleSurahHeader" checked>
-            <span class="slider"></span>
-          </label>
-        </div>
-        <div class="toggle-row">
-          <span style="font-size: 0.85rem; color: var(--text-secondary);">إظهار الترجمة الإنجليزية</span>
-          <label class="switch">
-            <input type="checkbox" id="toggleTranslation" checked>
             <span class="slider"></span>
           </label>
         </div>
@@ -167,6 +184,15 @@
           <span id="fontSizeLabel" class="control-value">48px</span>
         </div>
         <input type="range" id="fontSizeSlider" min="28" max="84" value="48">
+      </div>
+
+      <!-- Font Opacity (شفافية الخط) -->
+      <div class="control-group">
+        <div class="control-label">
+          <label for="fontOpacitySlider">شفافية النص والتوهج</label>
+          <span id="fontOpacityLabel" class="control-value">100%</span>
+        </div>
+        <input type="range" id="fontOpacitySlider" min="20" max="100" value="100">
       </div>
 
       <!-- Text Vertical Position (رفع / تنزيل) -->
@@ -220,6 +246,11 @@
         </div>
 
         <div class="time-display" id="timeDisplay">0:00 / 0:00</div>
+
+        <!-- Snapshot Button -->
+        <button class="nav-btn" id="snapshotBtn" title="التقاط صورة بوستر HD" style="color: var(--primary-gold);">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+        </button>
       </div>
     </section>
 

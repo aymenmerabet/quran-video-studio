@@ -5,6 +5,8 @@
 
 export const RECITERS = [
   { id: 7, name: "مشاري بن راشد العفاسي", englishName: "Mishary Rashid Alafasy", style: "مرتل", everyAyahFolder: "Alafasy_128kbps" },
+  { id: 101, name: "علي عبد الله جابر", englishName: "Ali Jaber", style: "إمام الحرم المكي", everyAyahFolder: "Ali_Jaber_64kbps" },
+  { id: 102, name: "أحمد بن علي العجمي", englishName: "Ahmed Al-Ajamy", style: "مرتل", everyAyahFolder: "ahmed_ibn_ali_al_ajamy_128kbps" },
   { id: 2, name: "عبد الباسط عبد الصمد", englishName: "AbdulBaset AbdulSamad", style: "مرتل", everyAyahFolder: "Abdul_Basit_Murattal_192kbps" },
   { id: 9, name: "محمد صديق المنشاوي", englishName: "Mohamed Siddiq Al-Minshawi", style: "مرتل", everyAyahFolder: "Minshawy_Murattal_128kbps" },
   { id: 6, name: "محمود خليل الحصري", englishName: "Mahmoud Khalil Al-Husary", style: "مرتل", everyAyahFolder: "Husary_128kbps" },
@@ -149,12 +151,15 @@ export async function fetchSurahVerses(surahNumber, fromAyah = 1, toAyah = null,
     const uthmaniUrl = `${API_BASE}/quran/verses/uthmani?chapter_number=${surahNumber}`;
     // Fetch English translation (Sahih International = ID 20 in Quran.com API v4)
     const translationUrl = `${API_BASE}/quran/translations/20?chapter_number=${surahNumber}`;
+    // Fetch Arabic Tafsir Muyassar (from alquran.cloud)
+    const tafsirUrl = `https://api.alquran.cloud/v1/surah/${surahNumber}/ar.muyassar`;
     // Fetch Audio recitations with verse segments
     const audioUrl = `${API_BASE}/chapter_recitations/${reciterId}/${surahNumber}?segments=true`;
 
-    const [uthmaniRes, transRes, audioRes] = await Promise.allSettled([
+    const [uthmaniRes, transRes, tafsirRes, audioRes] = await Promise.allSettled([
       fetch(uthmaniUrl).then(r => r.json()),
       fetch(translationUrl).then(r => r.json()),
+      fetch(tafsirUrl).then(r => r.json()),
       fetch(audioUrl).then(r => r.json())
     ]);
 
@@ -166,6 +171,11 @@ export async function fetchSurahVerses(surahNumber, fromAyah = 1, toAyah = null,
     let translations = [];
     if (transRes.status === 'fulfilled' && transRes.value.translations) {
       translations = transRes.value.translations;
+    }
+
+    let tafsirList = [];
+    if (tafsirRes.status === 'fulfilled' && tafsirRes.value.data && tafsirRes.value.data.ayahs) {
+      tafsirList = tafsirRes.value.data.ayahs;
     }
 
     // Fallback translation from AlQuran.cloud if needed
@@ -193,6 +203,7 @@ export async function fetchSurahVerses(surahNumber, fromAyah = 1, toAyah = null,
       const verseKey = `${surahNumber}:${i}`;
       const uthmaniObj = uthmaniVerses.find(v => v.verse_key === verseKey);
       const transObj = translations[i - 1];
+      const tafsirObj = tafsirList[i - 1];
 
       let textUthmani = uthmaniObj ? uthmaniObj.text_uthmani : `آية ${i}`;
       let rawTranslation = transObj ? transObj.text : '';
@@ -201,6 +212,8 @@ export async function fetchSurahVerses(surahNumber, fromAyah = 1, toAyah = null,
         .replace(/<sup[^>]*>.*?<\/sup>/gi, '')
         .replace(/<[^>]*>?/gm, '')
         .trim();
+
+      let textTafsir = tafsirObj ? tafsirObj.text.replace(/<[^>]*>?/gm, '').trim() : '';
 
       // Fallback single verse audio from EveryAyah (guaranteed to always work)
       const paddedSurah = String(surahNumber).padStart(3, '0');
@@ -227,6 +240,7 @@ export async function fetchSurahVerses(surahNumber, fromAyah = 1, toAyah = null,
         verseKey,
         textUthmani,
         textTranslation,
+        textTafsir,
         everyAyahUrl,
         timing
       });

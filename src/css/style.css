@@ -209,14 +209,14 @@ select option {
   color: #ffffff;
 }
 
-/* Aspect Ratio Buttons */
-.aspect-selector {
+/* Aspect Ratio & Subtext Selectors */
+.aspect-selector, .subtext-selector {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 0.5rem;
 }
 
-.aspect-btn {
+.aspect-btn, .subtext-btn {
   padding: 0.75rem 0.5rem;
   background: var(--bg-card);
   border: 1px solid var(--border-subtle);
@@ -227,25 +227,52 @@ select option {
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
+  text-align: center;
   gap: 0.35rem;
   transition: var(--transition);
+}
+
+.subtext-btn {
+  padding: 0.6rem 0.4rem;
+  font-size: 0.8rem;
 }
 
 .aspect-btn svg {
   stroke: currentColor;
 }
 
-.aspect-btn:hover {
+.aspect-btn:hover, .subtext-btn:hover {
   background: var(--bg-card-hover);
   color: var(--text-primary);
 }
 
-.aspect-btn.active {
+.aspect-btn.active, .subtext-btn.active {
   background: linear-gradient(135deg, rgba(212, 175, 55, 0.2), rgba(16, 185, 129, 0.15));
   border-color: var(--primary-gold);
   color: var(--primary-gold-light);
   font-weight: 600;
   box-shadow: var(--shadow-gold);
+}
+
+/* Free Stock Badges */
+.stock-link-badge {
+  display: inline-block;
+  padding: 0.3rem 0.6rem;
+  font-size: 0.75rem;
+  font-family: var(--font-latin);
+  border-radius: var(--radius-full);
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--border-subtle);
+  color: var(--primary-gold-light);
+  text-decoration: none;
+  transition: var(--transition);
+}
+
+.stock-link-badge:hover {
+  background: rgba(212, 175, 55, 0.2);
+  border-color: var(--primary-gold);
+  transform: translateY(-1px);
 }
 
 /* Theme / Background Badges */

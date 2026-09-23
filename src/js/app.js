@@ -50,17 +50,23 @@ class QuranStudioApp {
     this.elProgressBar = document.getElementById('progressBar');
     this.elTimeDisplay = document.getElementById('timeDisplay');
 
-    // Style toggles
-    this.elToggleTrans = document.getElementById('toggleTranslation');
+    // Style toggles & Subtext
+    this.subtextBtns = document.querySelectorAll('.subtext-btn');
     this.elToggleSurahHeader = document.getElementById('toggleSurahHeader');
     this.elToggleReciter = document.getElementById('toggleReciter');
     this.elFontSizeSlider = document.getElementById('fontSizeSlider');
     this.elFontSizeLabel = document.getElementById('fontSizeLabel');
+    this.elFontOpacitySlider = document.getElementById('fontOpacitySlider');
+    this.elFontOpacityLabel = document.getElementById('fontOpacityLabel');
     this.elTextPosSlider = document.getElementById('textPosSlider');
     this.elTextPosLabel = document.getElementById('textPosLabel');
     this.colorSwatches = document.querySelectorAll('.color-swatch');
     this.elCustomColorPicker = document.getElementById('customColorPicker');
     this.elBgUpload = document.getElementById('bgUpload');
+    this.elSnapshotBtn = document.getElementById('snapshotBtn');
+
+    // Current subtext mode
+    this.currentSubtext = 'translation'; // 'translation', 'tafsir', 'none'
 
     // Export elements
     this.elBtnExport = document.getElementById('btnExport');
@@ -161,15 +167,20 @@ class QuranStudioApp {
       }
     });
 
-    // Font and Overlay Toggles
-    this.elToggleTrans.addEventListener('change', (e) => {
-      this.renderer.updateSettings({ showTranslation: e.target.checked });
-      // Toggle translation in the playlist as well
-      const transItems = document.querySelectorAll('.ayah-item-trans');
-      transItems.forEach(el => {
-        el.style.display = e.target.checked ? 'block' : 'none';
+    // Subtext Selection (Translation / Tafsir / None)
+    this.subtextBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        this.subtextBtns.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        const subtext = btn.dataset.subtext;
+        this.currentSubtext = subtext;
+        this.renderer.updateSettings({ subtextType: subtext });
+        if (this.surahData) {
+          this.renderPlaylist(this.surahData.verses);
+        }
       });
     });
+
     this.elToggleSurahHeader.addEventListener('change', (e) => {
       this.renderer.updateSettings({ showSurahHeader: e.target.checked });
     });
@@ -183,6 +194,24 @@ class QuranStudioApp {
       }
       this.renderer.updateSettings({ fontSize: size });
     });
+
+    // Font Opacity (شفافية الخط)
+    this.elFontOpacitySlider.addEventListener('input', (e) => {
+      const val = parseInt(e.target.value);
+      if (this.elFontOpacityLabel) {
+        this.elFontOpacityLabel.textContent = `${val}%`;
+      }
+      this.renderer.updateSettings({ fontOpacity: val / 100 });
+    });
+
+    // Snapshot Poster Button
+    if (this.elSnapshotBtn) {
+      this.elSnapshotBtn.addEventListener('click', () => {
+        const verseNum = this.renderer.state.currentVerse?.ayahNumber || 1;
+        const surahName = this.surahData?.surah?.englishName || 'Surah';
+        this.renderer.takeSnapshot(`Quran_${surahName}_Ayah_${verseNum}.png`);
+      });
+    }
 
     // Text Vertical Position (رفع / تنزيل)
     this.elTextPosSlider.addEventListener('input', (e) => {
@@ -297,16 +326,25 @@ class QuranStudioApp {
   }
 
   renderPlaylist(verses) {
-    this.elAyahList.innerHTML = verses.map((v, i) => `
-      <div class="ayah-item ${i === 0 ? 'active' : ''}" data-index="${i}">
-        <div class="ayah-item-header">
-          <span>الآية ${v.ayahNumber}</span>
-          <span style="font-family: var(--font-latin); font-size: 0.75rem; color: var(--text-muted);">${v.verseKey}</span>
+    this.elAyahList.innerHTML = verses.map((v, i) => {
+      let subtextContent = '';
+      if (this.currentSubtext === 'translation' && v.textTranslation) {
+        subtextContent = `<div class="ayah-item-trans">${v.textTranslation}</div>`;
+      } else if (this.currentSubtext === 'tafsir' && v.textTafsir) {
+        subtextContent = `<div class="ayah-item-trans" style="direction: rtl; text-align: right; color: var(--primary-gold-light); font-family: var(--font-arabic-ui); font-size: 0.85rem;">التفسير: ${v.textTafsir}</div>`;
+      }
+
+      return `
+        <div class="ayah-item ${i === 0 ? 'active' : ''}" data-index="${i}">
+          <div class="ayah-item-header">
+            <span>الآية ${v.ayahNumber}</span>
+            <span style="font-family: var(--font-latin); font-size: 0.75rem; color: var(--text-muted);">${v.verseKey}</span>
+          </div>
+          <div class="ayah-item-text">${v.textUthmani}</div>
+          ${subtextContent}
         </div>
-        <div class="ayah-item-text">${v.textUthmani}</div>
-        ${v.textTranslation ? `<div class="ayah-item-trans">${v.textTranslation}</div>` : ''}
-      </div>
-    `).join('');
+      `;
+    }).join('');
 
     // Attach click events
     this.elAyahList.querySelectorAll('.ayah-item').forEach(item => {
