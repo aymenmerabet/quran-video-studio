@@ -168,6 +168,29 @@
         </div>
         <input type="range" id="fontSizeSlider" min="28" max="84" value="48">
       </div>
+
+      <!-- Text Vertical Position (رفع / تنزيل) -->
+      <div class="control-group">
+        <div class="control-label">
+          <label for="textPosSlider">موضع النص (رفع / تنزيل)</label>
+          <span id="textPosLabel" class="control-value">46%</span>
+        </div>
+        <input type="range" id="textPosSlider" min="15" max="80" value="46">
+      </div>
+
+      <!-- Text Color & Glow Selection -->
+      <div class="control-group">
+        <label class="control-label">لون الخط والتوهج</label>
+        <div class="color-palette-grid">
+          <button class="color-swatch active" data-color="#F5D77F" data-glow="rgba(212, 175, 55, 0.45)" style="background: #F5D77F; color: #F5D77F;" title="ذهب ملكي"></button>
+          <button class="color-swatch" data-color="#FFFFFF" data-glow="rgba(255, 255, 255, 0.4)" style="background: #FFFFFF; color: #FFFFFF;" title="أبيض ناصع"></button>
+          <button class="color-swatch" data-color="#6EE7B7" data-glow="rgba(16, 185, 129, 0.5)" style="background: #6EE7B7; color: #6EE7B7;" title="زمردي مشرق"></button>
+          <button class="color-swatch" data-color="#7DD3FC" data-glow="rgba(56, 189, 248, 0.5)" style="background: #7DD3FC; color: #7DD3FC;" title="سماوي هادئ"></button>
+          <button class="color-swatch" data-color="#F9A8D4" data-glow="rgba(244, 114, 182, 0.5)" style="background: #F9A8D4; color: #F9A8D4;" title="وردي خافت"></button>
+          <button class="color-swatch" data-color="#FDBA74" data-glow="rgba(249, 115, 22, 0.5)" style="background: #FDBA74; color: #FDBA74;" title="عنبر دافئ"></button>
+          <input type="color" id="customColorPicker" class="color-picker-input" value="#F5D77F" title="اختر لون مخصص">
+        </div>
+      </div>
     </aside>
 
     <!-- Center Stage: Live Interactive Previewer -->

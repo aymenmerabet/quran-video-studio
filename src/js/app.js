@@ -56,6 +56,10 @@ class QuranStudioApp {
     this.elToggleReciter = document.getElementById('toggleReciter');
     this.elFontSizeSlider = document.getElementById('fontSizeSlider');
     this.elFontSizeLabel = document.getElementById('fontSizeLabel');
+    this.elTextPosSlider = document.getElementById('textPosSlider');
+    this.elTextPosLabel = document.getElementById('textPosLabel');
+    this.colorSwatches = document.querySelectorAll('.color-swatch');
+    this.elCustomColorPicker = document.getElementById('customColorPicker');
     this.elBgUpload = document.getElementById('bgUpload');
 
     // Export elements
@@ -179,6 +183,44 @@ class QuranStudioApp {
       }
       this.renderer.updateSettings({ fontSize: size });
     });
+
+    // Text Vertical Position (رفع / تنزيل)
+    this.elTextPosSlider.addEventListener('input', (e) => {
+      const pos = parseInt(e.target.value);
+      if (this.elTextPosLabel) {
+        this.elTextPosLabel.textContent = `${pos}%`;
+      }
+      this.renderer.updateSettings({ textPosY: pos });
+    });
+
+    // Font Color Palette Selection
+    this.colorSwatches.forEach(swatch => {
+      swatch.addEventListener('click', () => {
+        this.colorSwatches.forEach(s => s.classList.remove('active'));
+        swatch.classList.add('active');
+        const color = swatch.dataset.color;
+        const glow = swatch.dataset.glow;
+        this.renderer.updateSettings({
+          highlightColor: color,
+          glowColor: glow
+        });
+        if (this.elCustomColorPicker) {
+          this.elCustomColorPicker.value = color;
+        }
+      });
+    });
+
+    // Custom Color Picker Input
+    if (this.elCustomColorPicker) {
+      this.elCustomColorPicker.addEventListener('input', (e) => {
+        const color = e.target.value;
+        this.colorSwatches.forEach(s => s.classList.remove('active'));
+        this.renderer.updateSettings({
+          highlightColor: color,
+          glowColor: `${color}80` // 50% alpha hex
+        });
+      });
+    }
 
     // Player Controls
     this.elPlayBtn.addEventListener('click', () => this.player.togglePlay());

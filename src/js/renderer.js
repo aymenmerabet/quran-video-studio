@@ -22,6 +22,7 @@ export class VideoRenderer {
       bgMediaElement: null, // HTMLVideoElement or HTMLImageElement
       fontFamily: 'Amiri Quran, serif',
       fontSize: 48,
+      textPosY: 46, // Vertical percentage (15% to 80%)
       showTranslation: true,
       showSurahHeader: true,
       showReciterName: true,
@@ -321,7 +322,8 @@ export class VideoRenderer {
     ctx.direction = 'rtl';
     ctx.textAlign = 'center';
 
-    const centerY = this.aspectRatio === '9:16' ? height * 0.46 : height * 0.44;
+    const posRatio = (parseInt(settings.textPosY) || 46) / 100;
+    const centerY = height * posRatio;
     const maxTextWidth = this.aspectRatio === '9:16' ? width * 0.86 : width * 0.78;
     
     // User-controlled font size from the slider
