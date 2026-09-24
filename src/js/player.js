@@ -90,32 +90,40 @@ export class QuranPlayer {
     });
   }
 
-  loadData(surahData) {
+  loadData(surahData, initialVerseIndex = 0) {
     this.currentSurahData = surahData;
-    this.currentVerseIndex = 0;
+    this.currentVerseIndex = Math.max(0, Math.min(initialVerseIndex, (surahData.verses.length || 1) - 1));
     this.pause();
 
     // Check if we have chapter audio and all verses have timings
     const hasFullTimings = surahData.chapterAudioUrl && 
       surahData.verses.every(v => v.timing && typeof v.timing.start === 'number');
 
+    const targetVerse = surahData.verses[this.currentVerseIndex] || surahData.verses[0];
+
     if (hasFullTimings) {
       this.playbackMode = 'chapter';
       this.audio.src = surahData.chapterAudioUrl;
-      // Seek to the start of the first selected verse
-      const firstVerse = surahData.verses[0];
-      if (firstVerse && firstVerse.timing) {
-        this.audio.currentTime = firstVerse.timing.start;
-      }
+      const targetStart = targetVerse?.timing ? targetVerse.timing.start : 0;
+      
+      const onMetadataLoaded = () => {
+        this.audio.removeEventListener('loadedmetadata', onMetadataLoaded);
+        if (this.audio.duration && targetStart < this.audio.duration) {
+          this.audio.currentTime = targetStart;
+        }
+      };
+      this.audio.addEventListener('loadedmetadata', onMetadataLoaded);
+      this.audio.load();
     } else {
       this.playbackMode = 'sequential';
-      if (surahData.verses.length > 0) {
-        this.audio.src = surahData.verses[0].everyAyahUrl;
+      if (targetVerse && targetVerse.everyAyahUrl) {
+        this.audio.src = targetVerse.everyAyahUrl;
+        this.audio.load();
       }
     }
 
     if (this.onVerseChange) {
-      this.onVerseChange(this.getCurrentVerse(), this.currentVerseIndex);
+      this.onVerseChange(targetVerse, this.currentVerseIndex);
     }
   }
 
@@ -124,6 +132,7 @@ export class QuranPlayer {
     const verse = this.getCurrentVerse();
     if (verse) {
       this.audio.src = verse.everyAyahUrl;
+      this.audio.load();
       this.play();
     }
   }
@@ -196,11 +205,11 @@ export class QuranPlayer {
         this.nextVerse();
         this.play();
       } else {
-        this.isPlaying = false;
+        this.pause();
         if (this.onEnded) this.onEnded();
       }
     } else {
-      this.isPlaying = false;
+      this.pause();
       if (this.onEnded) this.onEnded();
     }
   }
@@ -210,15 +219,34 @@ export class QuranPlayer {
     if (this.audioCtx && this.audioCtx.state === 'suspended') {
       this.audioCtx.resume();
     }
+
+    const currentVerse = this.getCurrentVerse();
+    if (this.playbackMode === 'chapter' && currentVerse && currentVerse.timing) {
+      if (isNaN(this.audio.currentTime) || this.audio.currentTime < currentVerse.timing.start || this.audio.currentTime >= currentVerse.timing.end) {
+        this.audio.currentTime = currentVerse.timing.start;
+      }
+    } else if (this.playbackMode === 'sequential' && currentVerse) {
+      if (!this.audio.src || !this.audio.src.includes(currentVerse.everyAyahUrl)) {
+        this.audio.src = currentVerse.everyAyahUrl;
+        this.audio.load();
+      }
+    }
+
     try {
+      this.isPlaying = true;
+      if (this.onStateChange) this.onStateChange({ isPlaying: true });
       await this.audio.play();
     } catch (e) {
-      console.warn('Playback autoplay restriction or error:', e);
+      console.warn('Playback error / interaction restriction:', e);
+      this.isPlaying = false;
+      if (this.onStateChange) this.onStateChange({ isPlaying: false });
     }
   }
 
   pause() {
+    this.isPlaying = false;
     this.audio.pause();
+    if (this.onStateChange) this.onStateChange({ isPlaying: false });
   }
 
   togglePlay() {
@@ -239,6 +267,7 @@ export class QuranPlayer {
     } else {
       this.audio.src = verse.everyAyahUrl;
       this.audio.currentTime = 0;
+      this.audio.load();
     }
 
     if (this.onVerseChange) {

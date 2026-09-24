@@ -332,7 +332,8 @@ class QuranStudioApp {
     // Reciter Selection Change
     this.elReciterSelect.addEventListener('change', (e) => {
       this.currentReciterId = parseInt(e.target.value);
-      this.loadSurah(this.currentSurahNumber, this.elFromAyah.value, this.elToAyah.value, this.currentReciterId, this.currentTranslationId);
+      const currentIdx = this.player.currentVerseIndex || 0;
+      this.loadSurah(this.currentSurahNumber, this.elFromAyah.value, this.elToAyah.value, this.currentReciterId, this.currentTranslationId, currentIdx);
     });
 
     // Translation Language Change
@@ -619,7 +620,7 @@ class QuranStudioApp {
     });
   }
 
-  async loadSurah(surahNum, fromAyah, toAyah, reciterId, translationId = this.currentTranslationId) {
+  async loadSurah(surahNum, fromAyah, toAyah, reciterId, translationId = this.currentTranslationId, initialVerseIndex = 0) {
     try {
       this.elPlayBtn.disabled = true;
       this.elProgressFill.style.width = '0%';
@@ -628,17 +629,21 @@ class QuranStudioApp {
       const data = await fetchSurahVerses(surahNum, fromAyah, toAyah, reciterId, translationId);
       this.surahData = data;
 
+      const targetIdx = Math.max(0, Math.min(initialVerseIndex || 0, (data.verses.length || 1) - 1));
+      const targetVerse = data.verses[targetIdx] || data.verses[0];
+
       this.renderer.updateState({
         surahName: data.surah.name,
         surahEnglish: data.surah.englishName,
         reciterName: data.reciter.name,
         totalVerses: data.surah.versesCount,
-        currentVerse: data.verses[0],
-        verseIndex: 0
+        currentVerse: targetVerse,
+        verseIndex: targetIdx
       });
 
       this.renderPlaylist(data.verses);
-      this.player.loadData(data);
+      this.player.loadData(data, targetIdx);
+      this.highlightActivePlaylistItem(targetIdx);
       this.elPlayBtn.disabled = false;
       this.elTimeDisplay.textContent = '0:00 / 0:00';
     } catch (err) {
