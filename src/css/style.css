@@ -255,6 +255,80 @@ select option {
   box-shadow: var(--shadow-gold);
 }
 
+/* Luxury Custom File Dropzone */
+.custom-file-dropzone {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 0.85rem 1rem;
+  background: rgba(13, 24, 20, 0.6);
+  border: 1.5px dashed rgba(212, 175, 55, 0.35);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: var(--transition);
+  text-align: right;
+  position: relative;
+  overflow: hidden;
+  margin-top: 4px;
+}
+
+.custom-file-dropzone:hover, .custom-file-dropzone.dragover {
+  border-color: var(--primary-gold);
+  background: rgba(212, 175, 55, 0.08);
+  box-shadow: 0 0 16px rgba(212, 175, 55, 0.15);
+  transform: translateY(-1px);
+}
+
+.dropzone-content {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  pointer-events: none;
+}
+
+.dropzone-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-sm);
+  background: rgba(212, 175, 55, 0.12);
+  border: 1px solid rgba(212, 175, 55, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--primary-gold-light);
+  flex-shrink: 0;
+  transition: var(--transition);
+}
+
+.custom-file-dropzone:hover .dropzone-icon {
+  background: var(--primary-gold);
+  color: #06120d;
+  transform: scale(1.05);
+}
+
+.dropzone-text {
+  display: flex;
+  flex-direction: column;
+  text-align: right;
+  gap: 2px;
+  overflow: hidden;
+}
+
+.dropzone-text strong {
+  font-size: 0.82rem;
+  color: var(--text-primary);
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dropzone-text small {
+  font-size: 0.70rem;
+  color: var(--text-muted);
+}
+
 /* Free Stock Badges */
 .stock-link-badge {
   display: inline-block;

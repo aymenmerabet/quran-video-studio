@@ -74,6 +74,9 @@ class QuranStudioApp {
     this.colorSwatches = document.querySelectorAll('.color-swatch');
     this.elCustomColorPicker = document.getElementById('customColorPicker');
     this.elBgUpload = document.getElementById('bgUpload');
+    this.elBgDropzone = document.getElementById('bgDropzone');
+    this.elBgUploadLabel = document.getElementById('bgUploadLabel');
+    this.elBgUploadSubtext = document.getElementById('bgUploadSubtext');
     this.elSnapshotBtn = document.getElementById('snapshotBtn');
 
     // Preset Backup / Restore elements
@@ -379,13 +382,14 @@ class QuranStudioApp {
       });
     });
 
-    // Background File Upload (Video or Image)
-    this.elBgUpload.addEventListener('change', (e) => {
-      const file = e.target.files[0];
+    // Background File Upload (Video or Image) & Drag and Drop
+    const processCustomBgFile = (file) => {
       if (!file) return;
-
       const url = URL.createObjectURL(file);
-      if (file.type.startsWith('video/')) {
+      const isVideo = file.type.startsWith('video/');
+      const isImage = file.type.startsWith('image/');
+
+      if (isVideo) {
         const video = document.createElement('video');
         video.src = url;
         video.loop = true;
@@ -393,14 +397,52 @@ class QuranStudioApp {
         video.playsInline = true;
         video.play();
         this.renderer.updateSettings({ bgType: 'video', bgMediaElement: video });
-      } else if (file.type.startsWith('image/')) {
+      } else if (isImage) {
         const img = new Image();
         img.src = url;
         img.onload = () => {
           this.renderer.updateSettings({ bgType: 'image', bgMediaElement: img });
         };
       }
+
+      if (this.elBgUploadLabel) {
+        const shortName = file.name.length > 22 ? `${file.name.slice(0, 19)}...` : file.name;
+        this.elBgUploadLabel.textContent = `✓ ${shortName}`;
+      }
+      if (this.elBgUploadSubtext) {
+        const sizeMb = (file.size / (1024 * 1024)).toFixed(1);
+        this.elBgUploadSubtext.textContent = `${isVideo ? 'فيديو' : 'صورة'} (${sizeMb} MB) - اضغط للاستبدال`;
+      }
+    };
+
+    this.elBgUpload.addEventListener('change', (e) => {
+      processCustomBgFile(e.target.files[0]);
     });
+
+    if (this.elBgDropzone) {
+      ['dragenter', 'dragover'].forEach(eventName => {
+        this.elBgDropzone.addEventListener(eventName, (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          this.elBgDropzone.classList.add('dragover');
+        });
+      });
+
+      ['dragleave', 'drop'].forEach(eventName => {
+        this.elBgDropzone.addEventListener(eventName, (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          this.elBgDropzone.classList.remove('dragover');
+        });
+      });
+
+      this.elBgDropzone.addEventListener('drop', (e) => {
+        const dt = e.dataTransfer;
+        if (dt && dt.files && dt.files[0]) {
+          processCustomBgFile(dt.files[0]);
+        }
+      });
+    }
 
     // Toggle Tafsir
     if (this.elToggleTafsir) {
