@@ -13,6 +13,12 @@ export class QuranPlayer {
     this.currentVerseIndex = 0;
     this.isPlaying = false;
     this.playbackMode = 'chapter'; // 'chapter' or 'sequential'
+
+    // Web Audio API for Real-time Visualizer
+    this.audioCtx = null;
+    this.analyser = null;
+    this.freqData = new Uint8Array(32);
+    this.isAudioSourceConnected = false;
     
     this.onVerseChange = null;
     this.onTimeUpdate = null;
@@ -22,6 +28,37 @@ export class QuranPlayer {
     this.initAudioListeners();
   }
 
+  initAudioContext() {
+    if (this.audioCtx) return;
+    try {
+      const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+      if (!AudioContextClass) return;
+
+      this.audioCtx = new AudioContextClass();
+      this.analyser = this.audioCtx.createAnalyser();
+      this.analyser.fftSize = 64;
+      this.analyser.smoothingTimeConstant = 0.8;
+      this.freqData = new Uint8Array(this.analyser.frequencyBinCount);
+
+      if (!this.isAudioSourceConnected) {
+        const source = this.audioCtx.createMediaElementSource(this.audio);
+        source.connect(this.analyser);
+        this.analyser.connect(this.audioCtx.destination);
+        this.isAudioSourceConnected = true;
+      }
+    } catch (e) {
+      console.warn('AudioContext notice:', e);
+    }
+  }
+
+  getFrequencyData() {
+    if (this.analyser && this.isPlaying) {
+      this.analyser.getByteFrequencyData(this.freqData);
+      return this.freqData;
+    }
+    return this.freqData;
+  }
+
   initAudioListeners() {
     this.audio.addEventListener('timeupdate', () => {
       this.handleTimeUpdate();
@@ -29,6 +66,9 @@ export class QuranPlayer {
 
     this.audio.addEventListener('play', () => {
       this.isPlaying = true;
+      if (this.audioCtx && this.audioCtx.state === 'suspended') {
+        this.audioCtx.resume();
+      }
       if (this.onStateChange) this.onStateChange({ isPlaying: true });
     });
 
@@ -165,10 +205,16 @@ export class QuranPlayer {
     }
   }
 
-  play() {
-    return this.audio.play().catch(e => {
+  async play() {
+    this.initAudioContext();
+    if (this.audioCtx && this.audioCtx.state === 'suspended') {
+      this.audioCtx.resume();
+    }
+    try {
+      await this.audio.play();
+    } catch (e) {
       console.warn('Playback autoplay restriction or error:', e);
-    });
+    }
   }
 
   pause() {

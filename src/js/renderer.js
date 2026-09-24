@@ -5,9 +5,10 @@
  */
 
 export class VideoRenderer {
-  constructor(canvas) {
+  constructor(canvas, player = null) {
     this.canvas = canvas;
     this.ctx = canvas.getContext('2d');
+    this.player = player;
 
     // Video Dimensions
     this.aspectRatio = '9:16'; // '9:16', '16:9', '1:1'
@@ -56,6 +57,10 @@ export class VideoRenderer {
 
     this.isRendering = false;
     this.animationFrameId = null;
+  }
+
+  setPlayer(player) {
+    this.player = player;
   }
 
   setAspectRatio(ratio) {
@@ -450,28 +455,43 @@ export class VideoRenderer {
 
   drawVisualizer(ctx, width, height, state) {
     ctx.save();
-    const vizY = this.aspectRatio === '9:16' ? height - 200 : height - 140;
-    const vizWidth = this.aspectRatio === '9:16' ? width * 0.6 : width * 0.4;
+    const vizY = this.aspectRatio === '9:16' ? height - 195 : height - 140;
+    const vizWidth = this.aspectRatio === '9:16' ? width * 0.58 : width * 0.42;
     const startX = (width - vizWidth) / 2;
 
     const bars = 28;
     const barWidth = vizWidth / bars;
+    const freqData = this.player ? this.player.getFrequencyData() : null;
+    const isPlaying = this.player && this.player.isPlaying;
     const time = state.time * 4;
 
-    ctx.fillStyle = 'rgba(212, 175, 55, 0.6)';
-    ctx.shadowBlur = 8;
-    ctx.shadowColor = 'rgba(212, 175, 55, 0.5)';
+    ctx.fillStyle = 'rgba(212, 175, 55, 0.75)';
+    ctx.shadowBlur = 10;
+    ctx.shadowColor = 'rgba(212, 175, 55, 0.55)';
 
     for (let i = 0; i < bars; i++) {
       const x = startX + i * barWidth;
       const normalizedIndex = (i / bars) * Math.PI;
-      const baseHeight = Math.sin(normalizedIndex) * 20;
-      const animatedHeight = baseHeight + Math.sin(time + i * 0.4) * 14 + Math.cos(time * 1.5 + i * 0.3) * 8;
-      const barH = Math.max(4, Math.abs(animatedHeight));
+      const baseHeight = Math.sin(normalizedIndex) * 16 + 4;
 
-      // Draw rounded miniature bars
+      // Symmetric frequency indexing for elegant visual balance
+      const distFromCenter = Math.abs(i - (bars - 1) / 2);
+      const freqIndex = Math.min(31, Math.floor(distFromCenter * (32 / (bars / 2))));
+
+      let freqIntensity = 0;
+      if (freqData && isPlaying) {
+        freqIntensity = (freqData[freqIndex] || 0) / 255;
+      }
+
+      const dynamicHeight = isPlaying
+        ? (freqIntensity * 38) + Math.sin(time + i * 0.4) * (freqIntensity * 12 + 3)
+        : Math.sin(time + i * 0.4) * 8 + Math.cos(time * 1.5 + i * 0.3) * 4;
+
+      const barH = Math.max(4, Math.abs(baseHeight + dynamicHeight));
+
+      // Draw rounded miniature bars in classic studio equalizer shape
       ctx.beginPath();
-      ctx.roundRect(x + 2, vizY - barH / 2, Math.max(2, barWidth - 4), barH, 2);
+      ctx.roundRect(x + 2, vizY - barH / 2, Math.max(2.5, barWidth - 4), barH, 2.5);
       ctx.fill();
     }
 

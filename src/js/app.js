@@ -10,8 +10,8 @@ import { VideoExporter } from './exporter.js';
 class QuranStudioApp {
   constructor() {
     this.canvas = document.getElementById('videoCanvas');
-    this.renderer = new VideoRenderer(this.canvas);
     this.player = new QuranPlayer();
+    this.renderer = new VideoRenderer(this.canvas, this.player);
     this.exporter = new VideoExporter(this.renderer, this.player);
 
     this.currentSurahNumber = 1;
